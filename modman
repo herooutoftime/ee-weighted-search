@@ -1,0 +1,4 @@
+# EE modules via modman
+
+system/expressionengine/modules/search/mod.search.php      system/expressionengine/modules/search/mod.search.php/
+system/expressionengine/third_party/weighted_search      system/expressionengine/third_party/weighted_search/
