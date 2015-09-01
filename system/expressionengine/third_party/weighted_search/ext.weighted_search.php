@@ -83,10 +83,23 @@ class Weighted_search_ext {
   public function settings()
   {
 
-    return $this->settings;
-//    return array(
-//      'weighted_search_title_weight' => array('i', '', '100')
-//    );
+    $status_options = array(
+      'enabled' => lang('status_enabled'),
+      'disabled' => lang('status_disabled'),
+    );
+
+    foreach($this->settings as $key => $value) {
+
+      switch($key) {
+        case 'status':
+          $settings['status'] = array('r', $status_options, $status);
+          break;
+        default:
+          $settings[$key] = array('i', '', $value);
+      }
+    }
+
+    return $settings;
   }
 
 	/**
@@ -103,20 +116,14 @@ class Weighted_search_ext {
 	{
 		// Setup custom settings in this array.
     include_once "install/weighted_search.inc.php";
-    extract($weighted_search_settings);
 
-    $status_options = array(
-      'enabled' => lang('status_enabled'),
-      'disbabled' => lang('status_disabled'),
-    );
-
-    $settings['status'] = array('r', $status_options, $ext_status);
-    $settings['channel_title'] = array('i', '', $title_weight);
+    $settings['status'] = $ext_status;
+    $settings['channel_title'] = $title_weight;
     foreach($fields as $field_id => $factor) {
-      $settings['field_id_' . $field_id] = array('i', '', $factor);
+      $settings['field_id_' . $field_id] = $factor;
     }
     foreach($channels as $channel_id => $factor) {
-      $settings['channel_id_' . $channel_id] = array('i', '', $factor);
+      $settings['channel_id_' . $channel_id] = $factor;
     }
 
 		$this->settings = $settings;
@@ -147,6 +154,10 @@ class Weighted_search_ext {
    */
 	public function weight_search_query($sql, $hash)
 	{
+    // Is this extension enabled?
+    if($this->settings['status'] == 'disabled')
+      return $sql;
+
     $search_term = $this->get_search_term($hash);
     /**
      * Add custom query attributes

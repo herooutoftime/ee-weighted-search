@@ -1,8 +1,8 @@
 <?php
-$weighted_search_settings = array(
-  'ext_status' => 'enabled',
-  'title_weight' => 100,
-  'fields' => array(
+
+  $ext_status = 'enabled';
+  $title_weight = 100;
+  $fields = array(
     8 => 10,    // body
     28 => 10,   // address
     29 => 10,   // year
@@ -18,9 +18,9 @@ $weighted_search_settings = array(
     118 => 10,  // designer_extern
     120 => 10,  // feature
     152 => 10,  // search_field
-  ),
+  );
 
-  'channels' => array(
+  $channels = array(
     1 => 100,   // products
     2 => 10,   // pages
     3 => 10,   // brochures
@@ -54,5 +54,4 @@ $weighted_search_settings = array(
     53 => 10,    // landing_pages
     54 => 10,    // pcon_planner
     55 => 10,    // zones_areas_settings
-  ),
-);
+  );
