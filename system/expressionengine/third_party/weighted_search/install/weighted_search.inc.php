@@ -1,6 +1,7 @@
 <?php
 
   $ext_status = 'enabled';
+  $debug = 'enabled';
   $title_weight = 100;
   $fields = array(
     8 => 10,    // body

@@ -91,8 +91,9 @@ class Weighted_search_ext {
     foreach($this->settings as $key => $value) {
 
       switch($key) {
+        case 'debug':
         case 'status':
-          $settings['status'] = array('r', $status_options, $value);
+          $settings[$key] = array('r', $status_options, $value);
           break;
         default:
           $settings[$key] = array('i', '', $value);
@@ -118,6 +119,7 @@ class Weighted_search_ext {
     include_once "install/weighted_search.inc.php";
 
     $settings['status'] = $ext_status;
+    $settings['debug'] = $debug;
     $settings['channel_title'] = $title_weight;
     foreach($fields as $field_id => $factor) {
       $settings['field_id_' . $field_id] = $factor;
@@ -154,6 +156,7 @@ class Weighted_search_ext {
    */
 	public function weight_search_query($sql, $hash)
 	{
+    die();
     // Is this extension enabled?
     if($this->settings['status'] == 'disabled')
       return $sql;
@@ -168,7 +171,7 @@ class Weighted_search_ext {
     $sql = $this->add_weight_column($sql, $search_term);
     $sql = $this->add_lang_join($sql);
     $sql = $this->add_lang_where($sql);
-
+    $this->EE->logger->developer($sql);
     // Get all resources which match the search query
     $query = $this->EE->db->query($sql);
 
@@ -201,11 +204,13 @@ class Weighted_search_ext {
     // Query concat
     $sql = substr($sql, 0, -1).') '.$end;
 
-    $this->EE->logger->developer('Logged in: ' . $this->EE->session->userdata('member_id'));
+//    $this->EE->logger->developer('Logged in: ' . $this->EE->session->userdata('member_id'));
 
     // Exit any further extension and
     // save this query to `exp_search`
     $this->EE->extensions->end_script = TRUE;
+
+    $this->EE->logger->developer($sql);
 
     return $sql;
 	}
