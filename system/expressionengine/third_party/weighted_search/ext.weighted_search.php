@@ -156,7 +156,6 @@ class Weighted_search_ext {
    */
 	public function weight_search_query($sql, $hash)
 	{
-    die();
     // Is this extension enabled?
     if($this->settings['status'] == 'disabled')
       return $sql;
