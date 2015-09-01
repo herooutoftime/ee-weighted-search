@@ -92,7 +92,7 @@ class Weighted_search_ext {
 
       switch($key) {
         case 'status':
-          $settings['status'] = array('r', $status_options, $status);
+          $settings['status'] = array('r', $status_options, $value);
           break;
         default:
           $settings[$key] = array('i', '', $value);
