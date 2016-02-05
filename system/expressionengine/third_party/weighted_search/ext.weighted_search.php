@@ -11,7 +11,7 @@
  * @since		Version 2.0
  * @filesource
  */
- 
+
 // ------------------------------------------------------------------------
 
 /**
@@ -21,7 +21,7 @@
  * @subpackage	Addons
  * @category	Extension
  * @author		Andreas Bilz
- * @link		
+ * @link
  */
 
 class Weighted_search_ext {
@@ -55,7 +55,7 @@ class Weighted_search_ext {
    * @var CI_Controller
    */
   private $EE;
-	
+
 	/**
 	 * Constructor
 	 *
@@ -139,9 +139,9 @@ class Weighted_search_ext {
 			'enabled'	=> 'y'
 		);
 
-		$this->EE->db->insert('extensions', $data);			
-		
-	}	
+		$this->EE->db->insert('extensions', $data);
+
+	}
 
 	// ----------------------------------------------------------------------
 
@@ -174,6 +174,12 @@ class Weighted_search_ext {
     // Get all resources which match the search query
     $query = $this->EE->db->query($sql);
 
+    $result = $query->result_array();
+    if(empty($result) || count($result) < 1) {
+        $this->EE->extensions->end_script = TRUE;
+        return $sql;
+    }
+
     // Generate search query
     // Will be stored in `exp_search` for later use
     $sql = "SELECT DISTINCT(t.entry_id), t.entry_id, t.channel_id, t.forum_topic_id, t.author_id, t.ip_address, t.title, t.url_title, t.status, t.view_count_one, t.view_count_two, t.view_count_three, t.view_count_four, t.allow_comments, t.comment_expiration_date, t.sticky, t.entry_date, t.year, t.month, t.day, t.entry_date, t.edit_date, t.expiration_date, t.recent_comment_date, t.comment_total, t.site_id as entry_site_id,
@@ -197,11 +203,12 @@ class Weighted_search_ext {
     }
     // Sort the result by the given IDs
     // Needs to be done because EE/Transcribe trashes it else
-    $order_ids_string = implode(',', $order_ids);
-    $end = " ORDER BY FIELD(t.entry_id, {$order_ids_string})";
-
-    // Query concat
-    $sql = substr($sql, 0, -1).') '.$end;
+    if(is_array($order_ids) && count($order_ids) > 0) {
+        $order_ids_string = implode(',', $order_ids);
+        $end = " ORDER BY FIELD(t.entry_id, {$order_ids_string})";
+        // Query concat
+        $sql = substr($sql, 0, -1).') '.$end;
+    }
 
 //    $this->EE->logger->developer('Logged in: ' . $this->EE->session->userdata('member_id'));
 
@@ -209,7 +216,7 @@ class Weighted_search_ext {
     // save this query to `exp_search`
     $this->EE->extensions->end_script = TRUE;
 
-    $this->EE->logger->developer($sql);
+    // $this->EE->logger->developer($sql);
 
     return $sql;
 	}
@@ -304,6 +311,9 @@ class Weighted_search_ext {
      * sort the result (IDs) correct
      */
     $weight_column = array();
+
+    $weight_column[] = "IF(exp_channel_data.field_id_21 LIKE '%Bene%', 10000, 0)";
+
     foreach($fields as $field_id => $factor) {
       $weight_column[] = "IF(exp_channel_data.field_id_{$field_id} LIKE '%{$term}%', $factor, 0)";
     }
@@ -321,7 +331,7 @@ class Weighted_search_ext {
     // Order by `weight` to get correct search resulsts
     $sql .= ' ORDER BY weight DESC';
 
-//    $this->EE->logger->developer('WEIGHT COLUMN SQL READY: ' .$sql);
+   $this->EE->logger->developer('WEIGHT COLUMN SQL READY: ' .$sql);
     return $sql;
   }
 
@@ -355,7 +365,7 @@ class Weighted_search_ext {
 			return FALSE;
 		}
 	}
-	
+
 	// ----------------------------------------------------------------------
 
   /**
