@@ -209,8 +209,11 @@ class Weighted_search_ext {
         // Query concat
         $sql = substr($sql, 0, -1).') '.$end;
     }
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> 8fbce21fa6352728fd4b732c0ed41209d317a25d
 
 //    $this->EE->logger->developer('Logged in: ' . $this->EE->session->userdata('member_id'));
 
@@ -313,6 +316,9 @@ class Weighted_search_ext {
      * sort the result (IDs) correct
      */
     $weight_column = array();
+
+    $weight_column[] = "IF(exp_channel_data.field_id_21 LIKE '%Bene%', 10000, 0)";
+
     foreach($fields as $field_id => $factor) {
       $weight_column[] = "IF(exp_channel_data.field_id_{$field_id} LIKE '%{$term}%', $factor, 0)";
     }
@@ -330,7 +336,7 @@ class Weighted_search_ext {
     // Order by `weight` to get correct search resulsts
     $sql .= ' ORDER BY weight DESC';
 
-//    $this->EE->logger->developer('WEIGHT COLUMN SQL READY: ' .$sql);
+   $this->EE->logger->developer('WEIGHT COLUMN SQL READY: ' .$sql);
     return $sql;
   }
 
