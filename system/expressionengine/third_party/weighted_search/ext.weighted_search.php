@@ -11,7 +11,7 @@
  * @since		Version 2.0
  * @filesource
  */
- 
+
 // ------------------------------------------------------------------------
 
 /**
@@ -21,7 +21,7 @@
  * @subpackage	Addons
  * @category	Extension
  * @author		Andreas Bilz
- * @link		
+ * @link
  */
 
 class Weighted_search_ext {
@@ -55,7 +55,7 @@ class Weighted_search_ext {
    * @var CI_Controller
    */
   private $EE;
-	
+
 	/**
 	 * Constructor
 	 *
@@ -139,9 +139,9 @@ class Weighted_search_ext {
 			'enabled'	=> 'y'
 		);
 
-		$this->EE->db->insert('extensions', $data);			
-		
-	}	
+		$this->EE->db->insert('extensions', $data);
+
+	}
 
 	// ----------------------------------------------------------------------
 
@@ -170,9 +170,15 @@ class Weighted_search_ext {
     $sql = $this->add_weight_column($sql, $search_term);
     $sql = $this->add_lang_join($sql);
     $sql = $this->add_lang_where($sql);
-    $this->EE->logger->developer($sql);
+    // $this->EE->logger->developer($sql);
     // Get all resources which match the search query
     $query = $this->EE->db->query($sql);
+
+    $result = $query->result_array();
+    if(empty($result) || count($result) < 1) {
+        $this->EE->extensions->end_script = TRUE;
+        return $sql;
+    }
 
     // Generate search query
     // Will be stored in `exp_search` for later use
@@ -197,11 +203,14 @@ class Weighted_search_ext {
     }
     // Sort the result by the given IDs
     // Needs to be done because EE/Transcribe trashes it else
-    $order_ids_string = implode(',', $order_ids);
-    $end = " ORDER BY FIELD(t.entry_id, {$order_ids_string})";
+    if(is_array($order_ids) && count($order_ids) > 0) {
+        $order_ids_string = implode(',', $order_ids);
+        $end = " ORDER BY FIELD(t.entry_id, {$order_ids_string})";
+        // Query concat
+        $sql = substr($sql, 0, -1).') '.$end;
+    }
 
-    // Query concat
-    $sql = substr($sql, 0, -1).') '.$end;
+
 
 //    $this->EE->logger->developer('Logged in: ' . $this->EE->session->userdata('member_id'));
 
@@ -209,7 +218,7 @@ class Weighted_search_ext {
     // save this query to `exp_search`
     $this->EE->extensions->end_script = TRUE;
 
-    $this->EE->logger->developer($sql);
+    // $this->EE->logger->developer($sql);
 
     return $sql;
 	}
@@ -355,7 +364,7 @@ class Weighted_search_ext {
 			return FALSE;
 		}
 	}
-	
+
 	// ----------------------------------------------------------------------
 
   /**
