@@ -209,11 +209,6 @@ class Weighted_search_ext {
         // Query concat
         $sql = substr($sql, 0, -1).') '.$end;
     }
-<<<<<<< HEAD
-
-
-=======
->>>>>>> 8fbce21fa6352728fd4b732c0ed41209d317a25d
 
 //    $this->EE->logger->developer('Logged in: ' . $this->EE->session->userdata('member_id'));
 
