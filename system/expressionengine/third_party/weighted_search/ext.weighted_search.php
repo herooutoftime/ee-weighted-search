@@ -99,7 +99,7 @@ class Weighted_search_ext {
     $fields = array();
 
     $misc = array(
-      'debug' => $this->settings['debug'],
+      'debug' => array_key_exists('debug', $this->settings) ? $this->settings['debug'] : '',
       'status' => $this->settings['status'],
       'channel_title' => $this->settings['channel_title'],
     );
