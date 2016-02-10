@@ -541,6 +541,10 @@ class Weighted_search_ext {
   public function get_special_weights()
   {
     $weights = array();
+
+    if(!array_key_exists('special', $this->settings))
+      return $weights;
+
     foreach($this->settings['special'] as $field => $specials) {
       foreach($specials as $special) {
         $expression = $special['expression'];
