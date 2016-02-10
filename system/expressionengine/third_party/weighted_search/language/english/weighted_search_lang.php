@@ -16,3 +16,4 @@ $lang['weighted_search_module_name'] = 'Weighted search';
 $lang['preferences_updated'] = 'Weighted search preferences updated';
 $lang['status_enabled'] = 'Enabled';
 $lang['status_disabled'] = 'Disabled';
+$lang['add_field_value_weight'] = 'Add field value weight';
