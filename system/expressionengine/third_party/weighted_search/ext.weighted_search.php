@@ -77,6 +77,17 @@ class Weighted_search_ext {
 
     }
 
+    public function get_setting($key)
+    {
+        $settings_query = $this->EE->db->select('settings')->where('class', __CLASS__)->limit(1)->get('extensions');
+        $settings_object = $settings_query->row();
+        $settings_array = unserialize($settings_object->settings);
+        if(empty($settings))
+            $settings = array();
+        $this->settings = array_merge($settings, $settings_array);
+        return $this->settings[$key];
+    }
+
     public function settings_form($current)
     {
         ee()->load->helper('form');
@@ -101,6 +112,7 @@ class Weighted_search_ext {
         $misc = array(
             'debug' => array('value' => (array_key_exists('debug', $this->settings) ? $this->settings['debug'] : ''), 'name' => ''),
             'status' => array('value' => $this->settings['status'], 'name' => ''),
+            'clear_query' => array('value' => $this->settings['clear_query'], 'name' => ''),
             'channel_title' => array('value' => $this->settings['channel_title'], 'name' => ''),
         );
         $channels = $this->get_channels();
@@ -111,6 +123,7 @@ class Weighted_search_ext {
             switch($key) {
                 case 'debug':
                 case 'status':
+                case 'clear_query':
                     // $vars['settings'][$key] = form_radio($key, $value);
                     $vars['fields'][$key] = array('r', $status_options, $value['value'], $value['name']);
                     break;
@@ -525,25 +538,28 @@ class Weighted_search_ext {
         // Stringify and prepend addition-sign (+)
         $weight_str = '(' . implode(' + ', $weight_column) . ') AS weight';
 
-        // Do some replacements to make the query valid
-        $sql = str_replace('DISTINCT(exp_channel_titles.entry_id)', '(exp_channel_titles.entry_id)', $sql);
-        $sql = str_replace('SELECT', 'SELECT ' . $weight_str . ', ', $sql);
-        // Order by `weight` to get correct search resulsts
-        $sql .= ' ORDER BY weight DESC';
+        $clear_query = ($this->get_setting('clear_query') == 'enabled' ? true : false);
+        if(!$clear_query) {
+            // Do some replacements to make the query valid
+            $sql = str_replace('DISTINCT(exp_channel_titles.entry_id)', '(exp_channel_titles.entry_id)', $sql);
+            $sql = str_replace('SELECT', 'SELECT ' . $weight_str . ', ', $sql);
+            // Order by `weight` to get correct search resulsts
+            $sql .= ' ORDER BY weight DESC';
+        } else {
+            $sql = '';
+            $sql .= "SELECT exp_channel_titles.entry_id, {$weight_str}";
+            $sql .= " FROM exp_channel_titles";
+            $sql .= " LEFT JOIN exp_channels ON exp_channel_titles.channel_id = exp_channels.channel_id";
+            $sql .= " LEFT JOIN exp_channel_data ON exp_channel_titles.entry_id = exp_channel_data.entry_id";
+            $sql .= " LEFT JOIN exp_category_posts ON exp_channel_titles.entry_id = exp_category_posts.entry_id";
+            $sql .= " LEFT JOIN exp_categories ON exp_category_posts.cat_id = exp_categories.cat_id";
+            $time = time();
+            $sql .= " WHERE exp_channels.site_id = '1' AND exp_channel_titles.entry_date < {$time} AND (exp_channel_titles.expiration_date = 0 OR exp_channel_titles.expiration_date > {$time}) AND exp_channel_titles.status = 'published' AND exp_channel_titles.status != 'closed'";
+            // Order by `weight` to get correct search resulsts
+            $sql .= ' ORDER BY weight DESC';
+        }
 
-//        $sql = '';
-//        $sql .= "SELECT exp_channel_titles.entry_id, {$weight_str}";
-//        $sql .= " FROM exp_channel_titles";
-//        $sql .= " LEFT JOIN exp_channels ON exp_channel_titles.channel_id = exp_channels.channel_id";
-//        $sql .= " LEFT JOIN exp_channel_data ON exp_channel_titles.entry_id = exp_channel_data.entry_id";
-//        $sql .= " LEFT JOIN exp_category_posts ON exp_channel_titles.entry_id = exp_category_posts.entry_id";
-//        $sql .= " LEFT JOIN exp_categories ON exp_category_posts.cat_id = exp_categories.cat_id";
-//        $time = time();
-//        $sql .= " WHERE exp_channels.site_id = '1' AND exp_channel_titles.entry_date < {$time} AND (exp_channel_titles.expiration_date = 0 OR exp_channel_titles.expiration_date > {$time}) AND exp_channel_titles.status = 'published' AND exp_channel_titles.status != 'closed'";
-//        // Order by `weight` to get correct search resulsts
-//        $sql .= ' ORDER BY weight DESC';
-
-        $this->EE->logger->developer('WEIGHT COLUMN SQL READY: ' . $sql);
+        $this->EE->logger->developer('WEIGHT COLUMN SQL READY WITH '. $clear_query .': ' . $sql);
         return $sql;
     }
 
