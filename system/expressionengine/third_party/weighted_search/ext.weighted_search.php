@@ -525,17 +525,23 @@ class Weighted_search_ext {
         // Stringify and prepend addition-sign (+)
         $weight_str = '(' . implode(' + ', $weight_column) . ') AS weight';
 
-        $sql = '';
-        $sql .= "SELECT exp_channel_titles.entry_id, {$weight_str}";
-        $sql .= " FROM exp_channel_titles";
-        $sql .= " LEFT JOIN exp_channels ON exp_channel_titles.channel_id = exp_channels.channel_id";
-        $sql .= " LEFT JOIN exp_channel_data ON exp_channel_titles.entry_id = exp_channel_data.entry_id";
-        $sql .= " LEFT JOIN exp_category_posts ON exp_channel_titles.entry_id = exp_category_posts.entry_id";
-        $sql .= " LEFT JOIN exp_categories ON exp_category_posts.cat_id = exp_categories.cat_id";
-        $time = time();
-        $sql .= " WHERE exp_channels.site_id = '1' AND exp_channel_titles.entry_date < {$time} AND (exp_channel_titles.expiration_date = 0 OR exp_channel_titles.expiration_date > {$time}) AND exp_channel_titles.status = 'published' AND exp_channel_titles.status != 'closed'";
+        // Do some replacements to make the query valid
+        $sql = str_replace('DISTINCT(exp_channel_titles.entry_id)', '(exp_channel_titles.entry_id)', $sql);
+        $sql = str_replace('SELECT', 'SELECT ' . $weight_str . ', ', $sql);
         // Order by `weight` to get correct search resulsts
         $sql .= ' ORDER BY weight DESC';
+
+//        $sql = '';
+//        $sql .= "SELECT exp_channel_titles.entry_id, {$weight_str}";
+//        $sql .= " FROM exp_channel_titles";
+//        $sql .= " LEFT JOIN exp_channels ON exp_channel_titles.channel_id = exp_channels.channel_id";
+//        $sql .= " LEFT JOIN exp_channel_data ON exp_channel_titles.entry_id = exp_channel_data.entry_id";
+//        $sql .= " LEFT JOIN exp_category_posts ON exp_channel_titles.entry_id = exp_category_posts.entry_id";
+//        $sql .= " LEFT JOIN exp_categories ON exp_category_posts.cat_id = exp_categories.cat_id";
+//        $time = time();
+//        $sql .= " WHERE exp_channels.site_id = '1' AND exp_channel_titles.entry_date < {$time} AND (exp_channel_titles.expiration_date = 0 OR exp_channel_titles.expiration_date > {$time}) AND exp_channel_titles.status = 'published' AND exp_channel_titles.status != 'closed'";
+//        // Order by `weight` to get correct search resulsts
+//        $sql .= ' ORDER BY weight DESC';
 
         $this->EE->logger->developer('WEIGHT COLUMN SQL READY: ' . $sql);
         return $sql;
