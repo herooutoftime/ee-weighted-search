@@ -113,6 +113,7 @@ class Weighted_search_ext {
             'debug' => array('value' => (array_key_exists('debug', $this->settings) ? $this->settings['debug'] : ''), 'name' => ''),
             'status' => array('value' => $this->settings['status'], 'name' => ''),
             'clear_query' => array('value' => $this->settings['clear_query'], 'name' => ''),
+            'replace_symbols' => array('value' => $this->settings['replace_symbols'], 'name' => ''),
             'channel_title' => array('value' => $this->settings['channel_title'], 'name' => ''),
         );
         $channels = $this->get_channels();
@@ -359,6 +360,7 @@ class Weighted_search_ext {
      */
     public function weight_search_query($sql, $hash)
     {
+
         // Is this extension enabled?
         if($this->settings['status'] == 'disabled')
             return $sql;
@@ -433,7 +435,9 @@ class Weighted_search_ext {
         // save this query to `exp_search`
         $this->EE->extensions->end_script = TRUE;
 
-        // $this->EE->logger->developer($sql);
+        if($this->settings['debug'] == 'enabled')
+            $this->EE->logger->developer($sql);
+
         return $sql;
     }
 
@@ -450,13 +454,14 @@ class Weighted_search_ext {
          * Search query not yet saved in exp_search
          * So we need to get the post parameter storing the search query
          */
-        //  $search_result = $this->EE->db->get_where('search', array('search_id' => $hash), 1);
-        //  $result = $search_result->row_array();
-        //  $search_result = $search_result->row();
-        //  $this->EE->logger->developer($this->EE->db->last_query());
-        //  $this->EE->logger->developer('GET SEARCH TERM: ' . json_encode($result));
-        //  return $result;
-        return $this->EE->input->post('keywords');
+
+        $keywords = $this->EE->input->post('keywords');
+        if($this->settings['debug'] == 'enabled')
+            $this->EE->logger->developer($keywords);
+        //$keywords = $this->prepare_term($keywords);
+        if($this->settings['debug'] == 'enabled')
+            $this->EE->logger->developer($keywords);
+        return $keywords;
         // return $_POST['keywords'];
     }
 
@@ -528,9 +533,13 @@ class Weighted_search_ext {
         $weight_column = $this->get_special_weights();
 
         foreach($fields as $field_id => $factor) {
+            if($field_id == 152)
+                continue;
             $weight_column[] = "IF(exp_channel_data.field_id_{$field_id} LIKE '%{$term}%', $factor, 0)" . "\n";
         }
         foreach($channels as $channel_id => $factor) {
+            if($field_id == 152)
+                continue;
             $weight_column[] = "IF(exp_channel_titles.channel_id = $channel_id, $factor, 0)" . "\n";
         }
 
@@ -558,9 +567,27 @@ class Weighted_search_ext {
             // Order by `weight` to get correct search resulsts
             $sql .= ' ORDER BY weight DESC';
         }
+        if($this->settings['debug'] == 'enabled')
+            $this->EE->logger->developer($original_term . ' -> ' . $term);
 
-        $this->EE->logger->developer('WEIGHT COLUMN SQL READY WITH '. $clear_query .': ' . $sql);
+        $original_term = $term;
+        $term = $this->prepare_term($term);
+        $sql = str_replace($original_term, $term, $sql);
+
+        if($this->settings['debug'] == 'enabled')
+            $this->EE->logger->developer('WEIGHT COLUMN SQL READY WITH '. $clear_query .': ' . $sql);
         return $sql;
+    }
+
+    public function prepare_term($term)
+    {
+        // Replace all [-_/#] with wildcards %
+        $symbols = explode(',', $this->settings['replace_symbols']);
+        $pattern = '/[' . implode(',', $symbols) . ']{1,}/';
+        if($this->settings['debug'] == 'enabled')
+            $this->EE->logger->developer($pattern);
+        $term = preg_replace($pattern, '%', $term);
+        return $term;
     }
 
     public function get_special_weights()

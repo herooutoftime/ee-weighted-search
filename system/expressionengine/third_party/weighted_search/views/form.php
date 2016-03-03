@@ -102,8 +102,9 @@ TABLE_TMPL;
         $pref .= $button;
     }
 
+    $subtext = lang("{$name}_subtext");
     $types[$group][] = array(
-        'first' => "<strong>{$label}</strong>".(($details['subtext'] != '') ? "<div class='subtext'>{$details['subtext']}</div>" : ''),
+        'first' => "<strong>{$label}</strong>".(($subtext != $name . '_subtext' && $subtext != '') ? "<div class='subtext'>{$subtext}</div>" : ''),
         'second' => $pref
     );
 
